@@ -17,11 +17,14 @@ async function find() { // EXERCISE A
     2A- When you have a grasp on the query go ahead and build it in Knex.
     Return from this function the resulting dataset.
   */
- return await db('schemes', {as: 'sc'} )
-    .leftJoin('steps as st', 'sc.scheme_id', 'st.scheme_id')
-    .count('st.step_id', {as: 'number of steps'} )
-    .groupBy('sc.scheme_id')
-    .orderBy('sc.scheme_id', 'asc');
+  let returnThis = await db('schemes');
+  returnThis = returnThis.map(async (item) => {
+    let countSteps = await findNumSteps(item.scheme_id);
+    console.log(countSteps);
+    return {...item};
+  })
+
+  return returnThis;
 }
 
 async function findById(scheme_id) { // EXERCISE B
@@ -127,6 +130,12 @@ async function findSteps(scheme_id) { // EXERCISE C
   return await db('steps')
       .where( { scheme_id })
       .orderBy('step_number', 'asc');
+}
+
+async function findNumSteps(scheme_id) {
+  return await db('steps')
+                  .where({ scheme_id })
+                  .count({ scheme_id });
 }
 
 async function add(scheme) { // EXERCISE D
