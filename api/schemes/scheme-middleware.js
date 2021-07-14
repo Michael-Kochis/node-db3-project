@@ -56,7 +56,7 @@ const validateScheme = (req, res, next) => {
 const validateStep = (req, res, next) => {
   const step = req.body;
   const testThis = step.instructions;
-  const failTest = false;
+  let failTest = false;
 
   if (NaN(step.step_number) || step.step_number < 1) {
     failTest = true;
