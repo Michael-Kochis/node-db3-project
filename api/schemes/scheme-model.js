@@ -18,7 +18,15 @@ async function find() { // EXERCISE A
     Return from this function the resulting dataset.
   */
   let returnThis = await db('schemes');
-
+  let counts = await db('schemes as sc')
+    .leftJoin('steps as st', 'sc.scheme_id', 'st.scheme_id')
+    .groupBy('sc.scheme_id')
+    .orderBy('sc.scheme_id')
+    .count('st.step_id', {as: "number_of_steps"});
+      
+  returnThis.forEach((item, index) => {
+    item.number_of_steps = counts[index].number_of_steps;
+  })
   return returnThis;
 }
 
