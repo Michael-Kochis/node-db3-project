@@ -2,9 +2,6 @@ const db = require('../../data/db-config')
 
 async function find() { // EXERCISE A
   /*
-    1A- Study the SQL query below running it in SQLite Studio against `data/schemes.db3`.
-    What happens if we change from a LEFT join to an INNER join?
-
       SELECT
           sc.*,
           count(st.step_id) as number_of_steps
@@ -13,20 +10,16 @@ async function find() { // EXERCISE A
           ON sc.scheme_id = st.scheme_id
       GROUP BY sc.scheme_id
       ORDER BY sc.scheme_id ASC;
-
-    2A- When you have a grasp on the query go ahead and build it in Knex.
-    Return from this function the resulting dataset.
+.
   */
-  let returnThis = await db('schemes');
-  let counts = await db('schemes as sc')
+  let returnThis = await db('schemes as sc')
     .leftJoin('steps as st', 'sc.scheme_id', 'st.scheme_id')
     .groupBy('sc.scheme_id')
     .orderBy('sc.scheme_id')
-    .count('st.step_id', {as: "number_of_steps"});
-      
-  returnThis.forEach((item, index) => {
-    item.number_of_steps = counts[index].number_of_steps;
-  })
+    .count('st.step_id', {as: 'number_of_steps'})
+    .select('sc.*');
+  let steps = await db('steps');
+  
   return returnThis;
 }
 
@@ -98,9 +91,7 @@ async function findById(scheme_id) { // EXERCISE B
   */
   let returnScheme = await db('schemes')
       .where({ scheme_id });
-  let steps = await db('steps')
-      .where({ scheme_id })
-      .orderBy('step_number');
+  let steps = findSteps(scheme_id);
   if (!steps || typeof(steps !== "array" || steps.length <= 0)) {
     steps = [];
   }
@@ -110,35 +101,12 @@ async function findById(scheme_id) { // EXERCISE B
 }
 
 async function findSteps(scheme_id) { // EXERCISE C
-  /*
-    1C- Build a query in Knex that returns the following data.
-    The steps should be sorted by step_number, and the array
-    should be empty if there are no steps for the scheme:
-
-      [
-        {
-          "step_id": 5,
-          "step_number": 1,
-          "instructions": "collect all the sheep in Scotland",
-          "scheme_name": "Get Rich Quick"
-        },
-        {
-          "step_id": 4,
-          "step_number": 2,
-          "instructions": "profit",
-          "scheme_name": "Get Rich Quick"
-        }
-      ]
-  */
   return await db('steps')
       .where( { scheme_id })
       .orderBy('step_number', 'asc');
 }
 
 async function add(scheme) { // EXERCISE D
-  /*
-    1D- This function creates a new scheme and resolves to _the newly created scheme_.
-  */
   let id = await db('schemes')
     .insert(scheme);
 
@@ -146,11 +114,6 @@ async function add(scheme) { // EXERCISE D
 }
 
 async function addStep(scheme_id, step) { // EXERCISE E
-  /*
-    1E- This function adds a step to the scheme with the given `scheme_id`
-    and resolves to _all the steps_ belonging to the given `scheme_id`,
-    including the newly created one.
-  */
   step.scheme_id = scheme_id;
 
   db('steps')
