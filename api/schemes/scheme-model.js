@@ -18,11 +18,6 @@ async function find() { // EXERCISE A
     Return from this function the resulting dataset.
   */
   let returnThis = await db('schemes');
-  returnThis = returnThis.map(async (item) => {
-    let countSteps = await findNumSteps(item.scheme_id);
-    console.log(countSteps);
-    return {...item};
-  })
 
   return returnThis;
 }
@@ -130,12 +125,6 @@ async function findSteps(scheme_id) { // EXERCISE C
   return await db('steps')
       .where( { scheme_id })
       .orderBy('step_number', 'asc');
-}
-
-async function findNumSteps(scheme_id) {
-  return await db('steps')
-                  .where({ scheme_id })
-                  .count({ scheme_id });
 }
 
 async function add(scheme) { // EXERCISE D
