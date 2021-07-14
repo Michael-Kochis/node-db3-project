@@ -19,83 +19,29 @@ async function find() { // EXERCISE A
     .count('st.step_id', {as: 'number_of_steps'})
     .select('sc.*');
   let steps = await db('steps');
+  for (let i=0; i < returnThis.length; i++) {
+    const checkFor = returnThis[i].scheme_id;    
+    returnThis[i].steps=[];
+
+    steps.forEach((item) => {
+      if (item.scheme_id === checkFor) {
+        returnThis[i].steps.push(item);
+      }
+    })
+  }
   
   return returnThis;
 }
 
-async function findById(scheme_id) { // EXERCISE B
-  /*
-    1B- Study the SQL query below running it in SQLite Studio against `data/schemes.db3`:
-
-      SELECT
-          sc.scheme_name,
-          st.*
-      FROM schemes as sc
-      LEFT JOIN steps as st
-          ON sc.scheme_id = st.scheme_id
-      WHERE sc.scheme_id = 1
-      ORDER BY st.step_number ASC;
-
-    2B- When you have a grasp on the query go ahead and build it in Knex
-    making it parametric: instead of a literal `1` you should use `scheme_id`.
-
-    3B- Test in Postman and see that the resulting data does not look like a scheme,
-    but more like an array of steps each including scheme information:
-
-      [
-        {
-          "scheme_id": 1,
-          "scheme_name": "World Domination",
-          "step_id": 2,
-          "step_number": 1,
-          "instructions": "solve prime number theory"
-        },
-        {
-          "scheme_id": 1,
-          "scheme_name": "World Domination",
-          "step_id": 1,
-          "step_number": 2,
-          "instructions": "crack cyber security"
-        },
-        // etc
-      ]
-
-    4B- Using the array obtained and vanilla JavaScript, create an object with
-    the structure below, for the case _when steps exist_ for a given `scheme_id`:
-
-      {
-        "scheme_id": 1,
-        "scheme_name": "World Domination",
-        "steps": [
-          {
-            "step_id": 2,
-            "step_number": 1,
-            "instructions": "solve prime number theory"
-          },
-          {
-            "step_id": 1,
-            "step_number": 2,
-            "instructions": "crack cyber security"
-          },
-          // etc
-        ]
-      }
-
-    5B- This is what the result should look like _if there are no steps_ for a `scheme_id`:
-
-      {
-        "scheme_id": 7,
-        "scheme_name": "Have Fun!",
-        "steps": []
-      }
-  */
-  let returnScheme = await db('schemes')
-      .where({ scheme_id });
-  let steps = findSteps(scheme_id);
-  if (!steps || typeof(steps !== "array" || steps.length <= 0)) {
-    steps = [];
+async function findById(scheme_id) {
+  if (typeof(scheme_id) !== "number") {
+    scheme_id = parseInt(scheme_id);
   }
-  returnScheme.steps = steps;
+  let returnScheme = await db('schemes')
+    .where({ scheme_id })
+    .first();
+    
+  returnScheme.steps = await findSteps(scheme_id);
 
   return returnScheme;
 }
@@ -106,24 +52,20 @@ async function findSteps(scheme_id) { // EXERCISE C
       .orderBy('step_number', 'asc');
 }
 
-async function add(scheme) { // EXERCISE D
+async function add(scheme) { 
   let id = await db('schemes')
     .insert(scheme);
 
   return findById(id);
 }
 
-async function addStep(scheme_id, step) { // EXERCISE E
+async function addStep(scheme_id, step) { 
   step.scheme_id = scheme_id;
 
-  db('steps')
-    .insert(step)
-    .then(() => {
-      return findSteps(scheme_id);
-    }).catch((err) => {
-      throw err;
-    });
-
+  await db('steps')
+    .insert(step);
+    
+  return findSteps(scheme_id);
 }
 
 module.exports = {
